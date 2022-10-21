@@ -35,7 +35,9 @@ ENV HOME=/var/lib/builds
 # Support for i386:
 # - for 32-bit builds+tests of Mbed TLS
 # - required to install Arm Compiler 5.06 (armcc)
-RUN dpkg --add-architecture i386
+RUN if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
+        dpkg --add-architecture i386; \
+    fi
 
 # Main apt-get call with all packages except those that have conflicts,
 # handled below. One big alphabetised list, in order to avoid duplicates, with
@@ -267,12 +269,16 @@ RUN locale && \
     dpkg-reconfigure locales
 
 # Add user
-RUN useradd -m user
+ARG USER_NAME=user
+ARG USER_UID=1000
+ARG USER_GID=1000
+RUN groupadd -g ${USER_GID} ${USER_NAME}
+RUN useradd -m -g ${USER_GID} -u ${USER_UID} ${USER_NAME}
 
 # Create workspace
 ARG AGENT_WORKDIR=/var/lib/builds
-RUN mkdir -p ${AGENT_WORKDIR} && chown user:user ${AGENT_WORKDIR}
-USER user
+RUN mkdir -p ${AGENT_WORKDIR} && chown ${USER_NAME}:${USER_NAME} ${AGENT_WORKDIR}
+USER ${USER_NAME}
 ENV AGENT_WORKDIR=${AGENT_WORKDIR}
 
 WORKDIR ${AGENT_WORKDIR}

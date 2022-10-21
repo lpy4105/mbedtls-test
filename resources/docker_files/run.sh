@@ -20,7 +20,7 @@
 # Purpose
 #
 # This is a helper script to start a docker container with common features.
-# 
+#
 # Features:
 #   User Ids    User/Grp Ids are specified same as the host user so that files
 #               created/updated by docker image can be accessible after
@@ -43,10 +43,12 @@ then
     exit 1
 fi
 MOUNT_DIR=$1
-IMAGE=$2
-USR_NAME=`id -un`
-USR_ID=`id -u`
-USR_GRP=`id -g`
+list_sh="$(dirname -- "$0")/list-docker-image-tags.sh"
+IMAGE="mbedtls-test/$2:$("$list_sh" "$2")"
+IMAGE_TAG=${3:-${IMAGE}}
+USR_NAME=$(id -un)
+USR_ID=$(id -u)
+USR_GRP=$(id -g)
 SSH_CFG_PATH=~/.ssh
 
 echo "****************************************************"
@@ -56,5 +58,5 @@ echo "  Mounting $SSH_CFG_PATH --> /home/user/.ssh"
 echo "  Mounting $MOUNT_DIR --> /var/lib/ws"
 echo "****************************************************"
 
-sudo docker run --network=host --rm -i -t -u $USR_ID:$USR_GRP -w /var/lib/ws -v $MOUNT_DIR:/var/lib/ws -v $SSH_CFG_PATH:/home/user/.ssh --cap-add SYS_PTRACE ${IMAGE}
+sudo docker run --network=host --rm -i -t -u $USR_ID:$USR_GRP -w /var/lib/ws -v $MOUNT_DIR:/var/lib/ws -v $SSH_CFG_PATH:/home/user/.ssh --cap-add SYS_PTRACE ${IMAGE_TAG}
 
